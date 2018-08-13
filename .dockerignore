@@ -3,6 +3,8 @@
 **/generated
 .wav_data
 .pytest_cache
+test/
+.git/
 
 **/*.pyc
 **/*.wav

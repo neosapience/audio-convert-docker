@@ -1,5 +1,5 @@
 name := neosapience/audio-convert
-tag := 0.0.1
+tag := 0.0.2
 pwd := $(shell pwd)
 
 build:
@@ -9,10 +9,10 @@ ls:
 	@docker images ${name}
 
 run:
-	@docker run --rm -it -p 5000:5000 ${name}:${tag}
+	@docker run --rm -it -P ${name}:${tag}
 
 dev:
-	@docker run --rm -it -v $(pwd):/code  ${name}:${tag} sh
+	@docker run --rm -it -v ${pwd}:/opt/audio-convert  ${name}:${tag} sh
 
 push:
 	@docker push ${name}:${tag}

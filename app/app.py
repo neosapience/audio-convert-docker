@@ -1,8 +1,8 @@
 from flask import Flask
 from flask import jsonify, request, send_file
+from pydub import AudioSegment
+from . import file
 
-import soundfile as sf
-import io
 import os
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ app = Flask(__name__)
 @app.route("/")
 def version():
     return jsonify({
-        'version': '0.0.1'
+        'version': '0.0.2'
     })
 
 
@@ -19,19 +19,40 @@ def version():
 def wav_to_ogg():
     if 'wav' not in request.files:
         abort(400, description='file is not attached')
+    
     wav_file = request.files['wav']
-    filename = wav_file.filename
-    wav_data = wav_file.read()
+    with file.make_tempfile() as wav_path:
+        wav_file.save(wav_path)
+        audio = AudioSegment.from_wav(wav_path)
+        
+        with file.make_tempfile() as ogg_path:
+            r = audio.export(ogg_path, format="ogg", codec="libopus")
+            if not r:
+                abort(400, description='failed wave to ogg opus')
+        
+            return send_file(
+                ogg_path, 
+                as_attachment=True,
+                attachment_filename=f'{os.path.basename(ogg_path)}.ogg',
+                mimetype='audio/ogg')
 
-    filename = os.path.basename(filename)
-    new_filename, _ = os.path.splitext(filename)
-    new_filename = f'{new_filename}.ogg'
 
-    data, samplerate = sf.read(io.BytesIO(wav_data))
-    buffer = io.BytesIO()
-    sf.write(buffer, data, samplerate, format='ogg')
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True,
-                     attachment_filename=new_filename,
-                     mimetype='audio/ogg')
+@app.route("/wav_to_mp3", methods=['POST'])
+def wav_to_mp3():
+    if 'wav' not in request.files:
+        abort(400, description='file is not attached')
+    
+    wav_file = request.files['wav']
+    with file.make_tempfile() as wav_path:
+        wav_file.save(wav_path)
+        audio = AudioSegment.from_wav(wav_path)
+        with file.make_tempfile() as ogg_path:
+            r = audio.export(ogg_path, format="mp3")
+            if not r:
+                abort(400, description='failed wave to mp3')
 
+            return send_file(
+                ogg_path, 
+                as_attachment=True,
+                attachment_filename=f'{os.path.basename(ogg_path)}.mp3',
+                mimetype='audio/mp3')
