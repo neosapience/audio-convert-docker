@@ -21,11 +21,11 @@ def wav_to_ogg():
         abort(400, description='file is not attached')
     
     wav_file = request.files['wav']
-    with file.make_tempfile() as wav_path:
+    with file.make_tempfile(prefix='wav_') as wav_path:
         wav_file.save(wav_path)
         audio = AudioSegment.from_wav(wav_path)
         
-        with file.make_tempfile() as ogg_path:
+        with file.make_tempfile(prefix='ogg_') as ogg_path:
             r = audio.export(ogg_path, format="ogg", codec="libopus")
             if not r:
                 abort(400, description='failed wave to ogg opus')
@@ -43,16 +43,16 @@ def wav_to_mp3():
         abort(400, description='file is not attached')
     
     wav_file = request.files['wav']
-    with file.make_tempfile() as wav_path:
+    with file.make_tempfile(prefix='wav_') as wav_path:
         wav_file.save(wav_path)
         audio = AudioSegment.from_wav(wav_path)
-        with file.make_tempfile() as ogg_path:
-            r = audio.export(ogg_path, format="mp3")
+        with file.make_tempfile(prefix='mp3_') as mp3_path:
+            r = audio.export(mp3_path, format="mp3")
             if not r:
                 abort(400, description='failed wave to mp3')
 
             return send_file(
-                ogg_path, 
+                mp3_path, 
                 as_attachment=True,
-                attachment_filename=f'{os.path.basename(ogg_path)}.mp3',
+                attachment_filename=f'{os.path.basename(mp3_path)}.mp3',
                 mimetype='audio/mp3')

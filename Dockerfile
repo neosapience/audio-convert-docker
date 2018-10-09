@@ -1,19 +1,21 @@
 # =============================================================================
 # Build
 # =============================================================================
-FROM python:3.6-alpine as build
+FROM python:3.6-alpine3.8 as build
 RUN apk update && apk add build-base
-RUN pip install greenlet
+RUN pip install gevent
 
 WORKDIR /tmp/site-packages
-RUN cp -r /usr/local/lib/python3.6/site-packages/greenlet-0.4.14.dist-info .
+RUN cp -r /usr/local/lib/python3.6/site-packages/gevent .
 RUN cp -r /usr/local/lib/python3.6/site-packages/greenlet.*.so .
+RUN cp -r /usr/local/lib/python3.6/site-packages/gevent-*dist-info .
+RUN cp -r /usr/local/lib/python3.6/site-packages/greenlet-*dist-info .
 
 
 # =============================================================================
 # Image
 # =============================================================================
-FROM python:3.6-alpine
+FROM python:3.6-alpine3.8
 
 RUN apk update && apk add ffmpeg \
   && rm -f /var/cache/apk/*

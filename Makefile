@@ -1,9 +1,12 @@
 name := neosapience/audio-convert
-tag := 0.0.2
+tag := 0.0.3
 pwd := $(shell pwd)
 
 build:
 	@docker build . -t ${name}:${tag} -t ${name}:latest
+
+build-sub:
+	@docker build . -f Dockerfile-build -t ${name}:${tag}-sub
 
 ls:
 	@docker images ${name}
