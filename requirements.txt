@@ -1,3 +1,5 @@
 gunicorn[gevent]
 Flask
 pydub
+pytest
+shortuuid

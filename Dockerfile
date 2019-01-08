@@ -26,6 +26,8 @@ WORKDIR /opt/audio-convert
 COPY requirements.txt .
 RUN pip install -r requirements.txt && rm -rf /root/.cache/pip
 
+ENV PYTHONPATH=/opt/audio-convert:$PYTHONPATH
+
 COPY . .
 EXPOSE 80
 ENTRYPOINT ["./docker-entrypoint.sh"]
