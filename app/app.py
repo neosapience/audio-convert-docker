@@ -8,6 +8,9 @@ import shortuuid
 
 app = Flask(__name__)
 
+_MP3_BITRATE = os.environ.get('MP3_BITRATE', '32k')
+_MP3_SAMPLING_RATE = os.environ.get('MP3_SAMPLING_RATE', '22050')
+
 
 @app.route("/")
 def version():
@@ -68,11 +71,8 @@ def _mp3_parameters(data):
     ret = dict()
     parameters = []
     
-    if 'bitrate' in data:
-        ret['bitrate'] = data['bitrate']
-
-    if 'sampling_rate' in data:
-        parameters += ['-ar', data["sampling_rate"]]
+    ret['bitrate'] = data.get('bitrate', _MP3_BITRATE)
+    parameters += ['-ar', data.get('sampling_rate', _MP3_SAMPLING_RATE)]
     
     if parameters:
         ret['parameters'] = parameters
