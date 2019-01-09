@@ -12,7 +12,7 @@ app = Flask(__name__)
 @app.route("/")
 def version():
     return jsonify({
-        'version': '0.0.4'
+        'version': '0.0.5'
     })
 
 
@@ -49,8 +49,9 @@ def wav_to_mp3():
     wav_data = BytesIO(wav_file.read())
     audio = AudioSegment.from_wav(wav_data)
 
+    mp3_params = _mp3_parameters(data)
     output_data = BytesIO()
-    r = audio.export(output_data, format="mp3", **data)
+    r = audio.export(output_data, format="mp3", **mp3_params)
     if not r:
         abort(400, description='failed wave to mp3')
 
@@ -61,3 +62,18 @@ def wav_to_mp3():
         as_attachment=True,
         attachment_filename=f'{name}.mp3',
         mimetype='audio/mpeg')
+
+
+def _mp3_parameters(data):
+    ret = dict()
+    parameters = []
+    
+    if 'bitrate' in data:
+        ret['bitrate'] = data['bitrate']
+
+    if 'sampling_rate' in data:
+        parameters += ['-ar', data["sampling_rate"]]
+    
+    if parameters:
+        ret['parameters'] = parameters
+    return ret

@@ -1,5 +1,5 @@
 name := neosapience/audio-convert
-tag := 0.0.4
+tag := 0.0.5
 pwd := $(shell pwd)
 
 build:
