@@ -15,7 +15,14 @@ _MP3_SAMPLING_RATE = os.environ.get('MP3_SAMPLING_RATE', '22050')
 @app.route("/")
 def version():
     return jsonify({
-        'version': '0.0.5'
+        'version': '0.0.6'
+    })
+
+
+@app.route("/health")
+def health():
+    return jsonify({
+        'health': 'ok'
     })
 
 

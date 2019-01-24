@@ -22,6 +22,11 @@ class Test(TestCase):
         expected = get_version_from_makefile()
         self.assertEqual(expected, r.get_json()['version'])
 
+    def test_health(self):
+        cli = app.test_client()
+        r = cli.get('/health')
+        self.assertEqual(200, r.status_code)
+
     def test_wav_to_mp3(self):
         cli = app.test_client()
         with open('./tests/assets/test.wav', 'rb') as f:
