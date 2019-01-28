@@ -1,5 +1,5 @@
 name := neosapience/audio-convert
-tag := 0.0.6
+tag := dev
 pwd := $(shell pwd)
 
 build:
@@ -9,7 +9,7 @@ build-sub:
 	@docker build . -f Dockerfile-build -t ${name}:${tag}-sub
 
 test:
-	@docker run --rm -it -v ${pwd}:/opt/audio-convert ${name}:${tag} pytest
+	@docker run --rm -it -v ${pwd}:/opt/audio-convert ${name}:${tag} pytest -lvs
 
 ls:
 	@docker images ${name}

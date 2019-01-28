@@ -2,25 +2,12 @@ from app.app import app
 from unittest import TestCase
 
 
-def get_version_from_makefile():
-    found = ''
-    with open('Makefile') as f:
-        for line in f.readlines():
-            line = line.strip()
-            if line.startswith('tag'):
-                found = line
-                break
-    version = found.split(':=')[1]
-    return version.strip()
-
-
 class Test(TestCase):
     def test_version(self):
         cli = app.test_client()
         r = cli.get('/')
         self.assertEqual(200, r.status_code)
-        expected = get_version_from_makefile()
-        self.assertEqual(expected, r.get_json()['version'])
+        self.assertEqual('latest', r.get_json()['version'])
 
     def test_health(self):
         cli = app.test_client()
