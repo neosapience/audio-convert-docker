@@ -20,7 +20,7 @@ class Test(TestCase):
         buffer.seek(0)
 
         self.data = {
-            'wav_files': [
+            'wav_files[]': [
                 (buffer, 'audio1.wav'),
                 (buffer2, 'audio2.wav')
             ],
@@ -38,8 +38,8 @@ class Test(TestCase):
         self.assertEqual(200, r.status_code)
         self.assertEqual(b'RIFF', r.data[:4])
         
-        with open('test.wav', 'wb') as f:
-            f.write(r.data)
+        # with open('test.wav', 'wb') as f:
+        #     f.write(r.data)
 
     def test_merge_out_mp3(self):
         cli = app.test_client()
