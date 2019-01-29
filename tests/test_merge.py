@@ -2,14 +2,15 @@ from app.app import app
 from unittest import TestCase
 from io import BytesIO
 import json
+import tarfile
 
 
 class Test(TestCase):
     def setUp(self):
         json_data = json.dumps({
-            'silences': [
-                0.5,
-                1.5,
+            'meta_list': [
+                ('wav_file_1', 0.5),
+                ('wav_file_2', 1.5)
             ]
         })
 
@@ -17,15 +18,18 @@ class Test(TestCase):
             buffer = BytesIO(f.read())
         
         buffer2 = BytesIO(buffer.read())
+        buffer.seek(0, 2)
+        audio_size = buffer.tell()
         buffer.seek(0)
 
         self.data = {
-            'wav_files[]': [
-                (buffer, 'audio1.wav'),
-                (buffer2, 'audio2.wav')
-            ],
-            'json_data': json_data
+            'json_data': json_data,
+            'wav_file_1': (buffer, 'audio1.wav'),
+            'wav_file_2': (buffer2, 'audio2.wav'),
         }
+        
+        self.expected_lower_bound = audio_size + audio_size + (1.5 * 32000)
+        self.expected_upper_bound = self.expected_lower_bound + (0.5 * 32000)
 
     def test_merge_out_mp4_unsupported(self):
         cli = app.test_client()
@@ -37,10 +41,11 @@ class Test(TestCase):
         r = cli.post('/merge?out=wav', content_type='multipart/form-data', data=self.data, buffered=True)
         self.assertEqual(200, r.status_code)
         self.assertEqual(b'RIFF', r.data[:4])
-        
-        # with open('test.wav', 'wb') as f:
-        #     f.write(r.data)
 
+        audio_size = len(r.data)
+        self.assertTrue(self.expected_lower_bound <= audio_size)
+        self.assertTrue(self.expected_upper_bound >= audio_size)
+        
     def test_merge_out_mp3(self):
         cli = app.test_client()
         r = cli.post('/merge?out=mp3', content_type='multipart/form-data', data=self.data, buffered=True)

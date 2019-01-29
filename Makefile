@@ -3,7 +3,7 @@ tag := dev
 pwd := $(shell pwd)
 
 build:
-	@docker build . -t ${name}:${tag} -t ${name}:latest
+	@docker build . -t ${name}:${tag}
 
 build-sub:
 	@docker build . -f Dockerfile-build -t ${name}:${tag}-sub

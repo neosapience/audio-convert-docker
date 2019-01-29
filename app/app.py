@@ -93,14 +93,14 @@ def merge():
     
     data = request.form.to_dict()
     json_data = json.loads(data['json_data'])
-    print(request.files)
-    audio_files = request.files.getlist('wav_files[]')
-    print(audio_files)
-    if len(json_data['silences']) != len(audio_files):
+
+    if len(json_data['meta_list']) != len(request.files):
         abort(400, description='mismatch audio files and silence data')
 
     combined = AudioSegment.empty()
-    for audio_file, silence in zip(audio_files, json_data['silences']):
+    for meta in json_data['meta_list']:
+        key, silence = meta
+        audio_file = request.files.get(key)
         audio_data = BytesIO(audio_file.read())
         silence_ms = int(silence * 1000)
         combined += AudioSegment.from_wav(audio_data)
