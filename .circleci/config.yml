@@ -1,0 +1,176 @@
+version: 2.1
+executors:
+  my-executor:
+    environment:
+      IMAGE_NAME: neosapience/audio-convert
+      DOCKER_BUILD_PATH: ./
+      DOCKER_FILE_PATH: ./Dockerfile
+      DOCKER_BASE_FILE_PATH: ./Dockerfile.base
+      RECIPE_URL: github.com/neosapience/eks-recipe.git
+      CONFIG_ROOT_DEV: k8s/apps/audio-convert/overlays/dev
+      CONFIG_ROOT_PROD: k8s/apps/audio-convert/overlays/prod
+
+jobs:
+  build-base:
+    executor: my-executor
+    machine: true
+    steps:
+    - checkout
+
+    - run:
+        name: Login Docker Hub
+        command: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+    - run:
+        name: Build images
+        command: |
+          docker build -t $IMAGE_NAME:base $DOCKER_BUILD_PATH -f $DOCKER_BASE_FILE_PATH
+
+    - run:
+        name: Push images
+        command: |
+          docker push $IMAGE_NAME:base
+
+  build-push:
+    executor: my-executor
+    machine: true
+    steps:
+    - run:
+        name: Setup Environment Variables
+        command: |
+          export abbrev=`echo $CIRCLE_SHA1 | head -c 7`
+          echo "export abbrev=$abbrev" >> $BASH_ENV
+
+    - run:
+        name: Print
+        command: |
+          echo "docker user name; $DOCKER_USER"
+          echo "image name; $IMAGE_NAME"
+
+    - checkout
+
+    - run:
+        name: Login Docker Hub
+        command: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+    - run:
+        name: Build images
+        command: |
+          docker build -t $IMAGE_NAME:latest $DOCKER_BUILD_PATH -f $DOCKER_FILE_PATH
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:commit-$abbrev
+
+    - run:
+        name: Push images
+        command: |
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:commit-$abbrev
+
+  release-prod:
+    executor: my-executor
+    machine: true
+    steps:
+    - run:
+        name: Setup Environment Variables
+        command: |
+          export abbrev=`echo $CIRCLE_SHA1 | head -c 7`
+          echo "export abbrev=$abbrev" >> $BASH_ENV
+
+    - run:
+        name: Print
+        command: |
+          echo "docker user name; $DOCKER_USER"
+          echo "image name; $IMAGE_NAME"
+
+    - run:
+        name: Login Docker Hub
+        command: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+    - run:
+        name: Tag and Push Image
+        command: |
+          docker pull $IMAGE_NAME:commit-$abbrev
+          docker tag $IMAGE_NAME:commit-$abbrev $IMAGE_NAME:$CIRCLE_TAG
+          docker push $IMAGE_NAME:$CIRCLE_TAG
+
+  update-recipe:
+    executor: my-executor
+    docker:
+      - image: neosapience/kustomize
+
+    steps:
+    - run:
+        name: Update Recipe
+        command: |
+          export abbrev=`echo $CIRCLE_SHA1 | head -c 7`
+          git config --global user.email "$GITHUB_EMAIL"
+          git config --global user.name "$GITHUB_USER"
+          git clone https://$GITHUB_USER:$GITHUB_PASS@$RECIPE_URL recipe
+          cd recipe/$CONFIG_ROOT_DEV
+          kustomize edit set image $IMAGE_NAME:commit-$abbrev
+          git commit -am "$IMAGE_NAME (by #$abbrev)"
+          git push origin master
+
+  update-recipe-prod:
+    executor: my-executor
+    docker:
+      - image: neosapience/kustomize
+
+    steps:
+    - run:
+        name: Update Recipe
+        command: |
+          export abbrev=`echo $CIRCLE_SHA1 | head -c 7`
+          git config --global user.email "$GITHUB_EMAIL"
+          git config --global user.name "$GITHUB_USER"
+          git clone https://$GITHUB_USER:$GITHUB_PASS@$RECIPE_URL recipe
+          cd recipe/$CONFIG_ROOT_PROD
+          kustomize edit set image $IMAGE_NAME:$CIRCLE_TAG
+          git commit -am "$IMAGE_NAME (by $CIRCLE_TAG)"
+          git push origin master
+
+workflows:
+  version: 2
+  build-push-flow:
+    jobs:
+    - build-push:
+        context: image-build
+        filters:
+          branches:
+            ignore:
+            - base
+            - /^ignore.*/
+    - update-recipe:
+        context: image-build
+        requires:
+        - build-push
+        filters:
+          branches:
+            only: master
+
+  release-prod-flow:
+    jobs:
+    - release-prod:
+        context: image-build
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
+    - update-recipe-prod:
+        context: image-build
+        requires:
+        - release-prod
+        filters:
+          tags:
+            only: /^v.*/
+
+  base-image-flow:
+    jobs:
+    - build-base:
+        context: image-build
+        filters:
+          branches:
+            only: base

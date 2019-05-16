@@ -5,6 +5,9 @@ pwd := $(shell pwd)
 build:
 	@docker build . -t ${name}:${tag}
 
+build-base:
+	@docker build . -t ${name}:base -f Dockerfile.base
+
 build-sub:
 	@docker build . -f Dockerfile-build -t ${name}:${tag}-sub
 
@@ -22,3 +25,6 @@ dev:
 
 push:
 	@docker push ${name}:${tag}
+
+push-base:
+	@docker push ${name}:base
