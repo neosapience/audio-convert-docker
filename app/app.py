@@ -41,10 +41,16 @@ def health():
 def wav_to_ogg():
     if 'wav' not in request.files:
         abort(400, description='file is not attached')
+    data = request.form.to_dict()
     
     wav_file = request.files['wav']
     wav_data = BytesIO(wav_file.read())
     audio = AudioSegment.from_wav(wav_data)
+
+
+    if data.get('silence', False):
+        silence_ms = int(float(data.get('silence')) * 1000)
+        audio += AudioSegment.silent(duration=silence_ms)
 
     output_data = BytesIO()
     r = audio.export(output_data, format="ogg", codec="libopus")
@@ -69,6 +75,10 @@ def wav_to_mp3():
     wav_file = request.files['wav']
     wav_data = BytesIO(wav_file.read())
     audio = AudioSegment.from_wav(wav_data)
+
+    if data.get('silence', False):
+        silence_ms = int(float(data.get('silence')) * 1000)
+        audio += AudioSegment.silent(duration=silence_ms)
 
     mp3_params = _mp3_parameters(data)
     output_data = BytesIO()
