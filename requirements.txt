@@ -3,3 +3,4 @@ Flask
 pydub
 pytest
 shortuuid
+mutagen
