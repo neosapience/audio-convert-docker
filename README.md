@@ -1,5 +1,8 @@
 # Audio Convert wav to ogg
 
+[![CircleCI](https://circleci.com/gh/neosapience/audio-convert-docker/tree/master.svg?style=svg)](https://circleci.com/gh/neosapience/audio-convert-docker/tree/master)
+
+
 ## run
 ```
 make build
