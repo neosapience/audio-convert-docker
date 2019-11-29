@@ -39,7 +39,8 @@ class Test(TestCase):
             r = cli.post('/wav_to_mp3', content_type='multipart/form-data', data={
                 'wav': f,
                 'bitrate': '16k',
-                'sampling_rate': '24000'
+                'sampling_rate': '24000',
+                'sample_fmt': 'flt'
             }, buffered=True)
 
             self.assertEqual(200, r.status_code)

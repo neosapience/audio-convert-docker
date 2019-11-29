@@ -11,6 +11,7 @@ app = Flask(__name__)
 
 _MP3_BITRATE = os.environ.get('MP3_BITRATE', '32k')
 _MP3_SAMPLING_RATE = os.environ.get('MP3_SAMPLING_RATE', '22050')
+_MP3_SAMPLE_FMT = os.environ.get('_MP3_SAMPLE_FMT', 's16')
 _content_type_map = {
     'wav': 'audio/wav',
     'ogg': 'audio/ogg',
@@ -142,6 +143,7 @@ def _mp3_parameters(data):
     
     ret['bitrate'] = data.get('bitrate', _MP3_BITRATE)
     parameters += ['-ar', data.get('sampling_rate', _MP3_SAMPLING_RATE)]
+    parameters += ['-sample_fmt', data.get('sample_fmt', _MP3_SAMPLE_FMT)]
     
     if parameters:
         ret['parameters'] = parameters
