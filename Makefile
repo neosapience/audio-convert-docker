@@ -28,3 +28,6 @@ push:
 
 push-base:
 	@docker push ${name}:base
+
+history:
+	@docker history ${name}:${tag}

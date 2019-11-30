@@ -83,7 +83,7 @@ def wav_to_mp3():
 
     mp3_params = _mp3_parameters(data)
     output_data = BytesIO()
-    r = audio.export(output_data, format="mp3", **mp3_params)
+    r = audio.export(output_data, format="mp3", codec="libmp3lame", **mp3_params)
     if not r:
         abort(400, description='failed wave to mp3')
 
@@ -122,7 +122,7 @@ def merge():
         r = combined.export(output_data, format="wav")
     elif ext == 'mp3':
         mp3_params = _mp3_parameters(json_data)
-        r = combined.export(output_data, format="mp3", **mp3_params)
+        r = combined.export(output_data, format="mp3", codec="libmp3lame", **mp3_params)
     elif ext == 'ogg':
         r = combined.export(output_data, format="ogg", codec="libopus")
 
