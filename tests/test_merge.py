@@ -3,6 +3,7 @@ from unittest import TestCase
 from io import BytesIO
 import json
 import tarfile
+import wave
 
 
 class Test(TestCase):
@@ -28,8 +29,8 @@ class Test(TestCase):
             'wav_file_2': (buffer2, 'audio2.wav'),
         }
         
-        self.expected_lower_bound = audio_size + audio_size + (1.5 * 32000)
-        self.expected_upper_bound = self.expected_lower_bound + (0.5 * 32000)
+        self.expected_lower_bound = audio_size + audio_size + int(1.5 * 32000)
+        self.expected_upper_bound = self.expected_lower_bound + int(0.5 * 32000)
 
     def test_merge_out_mp4_unsupported(self):
         cli = app.test_client()
@@ -43,8 +44,8 @@ class Test(TestCase):
         self.assertEqual(b'RIFF', r.data[:4])
 
         audio_size = len(r.data)
-        self.assertTrue(self.expected_lower_bound <= audio_size)
-        self.assertTrue(self.expected_upper_bound >= audio_size)
+        assert self.expected_lower_bound <= audio_size
+        assert self.expected_upper_bound >= audio_size
         
     def test_merge_out_mp3(self):
         cli = app.test_client()

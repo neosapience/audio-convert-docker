@@ -6,6 +6,9 @@ import os
 from io import BytesIO
 import shortuuid
 import json
+import librosa
+import numpy as np
+from scipy.io import wavfile
 
 app = Flask(__name__)
 
@@ -98,6 +101,7 @@ def wav_to_mp3():
 
 @app.route("/merge", methods=['POST'])
 def merge():
+    rmse_dano = 0.0777645544406
     ext = request.args.get('out', 'wav')
     if ext not in ('wav', 'mp3', 'ogg'):
         abort(400, description='only support wav or mp3')
@@ -108,23 +112,37 @@ def merge():
     if len(json_data['meta_list']) != len(request.files):
         abort(400, description='mismatch audio files and silence data')
 
-    combined = AudioSegment.empty()
+    # combined = AudioSegment.empty()
+    combined = None
     for meta in json_data['meta_list']:
         key, silence = meta
         audio_file = request.files.get(key)
         audio_data = BytesIO(audio_file.read())
-        silence_ms = int(silence * 1000)
-        combined += AudioSegment.from_wav(audio_data)
-        combined += AudioSegment.silent(duration=silence_ms)
+
+        audio_raw, rate = librosa.load(audio_data, sr=None)
+        curr_rmse = np.sqrt(np.mean(audio_raw ** 2))
+        audio = audio_raw / curr_rmse * rmse_dano
+
+        padding = np.zeros(int(rate * silence))
+        if combined is None:
+            combined = np.concatenate([audio, padding], axis=0)
+        else:
+            combined = np.concatenate([combined, audio, padding], axis=0)
+
+    combined = (combined * 32767).astype(np.int16)
+    buffer = BytesIO()
+    wavfile.write(buffer, rate, combined)
+    buffer.seek(0)
 
     output_data = BytesIO()
+    audio_segment = AudioSegment.from_wav(buffer)
     if ext == 'wav':
-        r = combined.export(output_data, format="wav")
+        r = audio_segment.export(output_data, format="wav")
     elif ext == 'mp3':
         mp3_params = _mp3_parameters(json_data)
-        r = combined.export(output_data, format="mp3", codec="libmp3lame", **mp3_params)
+        r = audio_segment.export(output_data, format="mp3", codec="libmp3lame", **mp3_params)
     elif ext == 'ogg':
-        r = combined.export(output_data, format="ogg", codec="libopus")
+        r = audio_segment.export(output_data, format="ogg", codec="libopus")
 
     if not r:
         abort(400, description='failed wave to mp3')
