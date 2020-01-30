@@ -1,27 +1,41 @@
 # =============================================================================
 # Build
 # =============================================================================
-FROM python:3.6-alpine3.8 as build
-RUN apk update && apk add build-base
-RUN pip install gevent
+FROM python:3.6.10-slim-buster as build
+RUN apt update && apt install -y build-essential libopenblas-dev libffi-dev
+RUN pip install Cython --install-option="--no-cython-compile"
+RUN pip install gevent numpy librosa
 
 WORKDIR /tmp/site-packages
 RUN cp -r /usr/local/lib/python3.6/site-packages/gevent* .
 RUN cp -r /usr/local/lib/python3.6/site-packages/greenlet* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/numpy* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/audioread* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/scipy* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/joblib* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/sklearn* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/six* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/llvmlite* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/numba* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/resampy* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/pycparser* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/*soundfile* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/librosa* .
+RUN cp -r /usr/local/lib/python3.6/site-packages/decorator* .
+# # =============================================================================
+# # Image
+# # =============================================================================
+FROM python:3.6.10-slim-buster
 
-
-# =============================================================================
-# Image
-# =============================================================================
-FROM python:3.6-alpine3.8
-
-RUN apk update && apk add ffmpeg curl sox \
-  && rm -f /var/cache/apk/*
+RUN apt update && apt install -y ffmpeg curl sox libopenblas-base \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /tmp/site-packages /usr/local/lib/python3.6/site-packages
 
 WORKDIR /opt/audio-convert
 COPY requirements.txt .
-RUN pip install -r requirements.txt && rm -rf /root/.cache/pip
+RUN pip install -r requirements.txt \
+  && pip install cffi \
+  && rm -rf /root/.cache/pip
 
 ENV PYTHONPATH=/opt/audio-convert:$PYTHONPATH
