@@ -102,7 +102,7 @@ def wav_to_mp3():
 @app.route("/merge", methods=['POST'])
 def merge():
     rmse_dano = 0.0777645544406
-    clip_len_in_ms = 0.02
+    clip_len_in_ms = 0.06
     ext = request.args.get('out', 'wav')
     if ext not in ('wav', 'mp3', 'ogg'):
         abort(400, description='only support wav or mp3')
