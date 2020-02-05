@@ -120,8 +120,7 @@ def merge():
         audio_data = BytesIO(audio_file.read())
 
         audio_raw, rate = librosa.load(audio_data, sr=None)
-        # curr_rmse = np.sqrt(np.mean(audio_raw ** 2))
-        curr_rmse = np.mean(np.abs(audio_raw))
+        curr_rmse = np.sqrt(np.mean(audio_raw ** 2))
         audio = audio_raw / curr_rmse * rmse_dano
         audio = np.clip(audio, -0.99, 0.99)
 
