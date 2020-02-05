@@ -102,6 +102,7 @@ def wav_to_mp3():
 @app.route("/merge", methods=['POST'])
 def merge():
     rmse_dano = 0.0777645544406
+    clip_len_in_ms = 0.02
     ext = request.args.get('out', 'wav')
     if ext not in ('wav', 'mp3', 'ogg'):
         abort(400, description='only support wav or mp3')
@@ -123,6 +124,7 @@ def merge():
         audio_data = BytesIO(audio_file.read())
 
         audio_raw, rate = librosa.load(audio_data, sr=None)
+        audio_raw = audio_raw[int(clip_len_in_ms * rate):-int(clip_len_in_ms * rate)]
         curr_rmse = np.sqrt(np.mean(audio_raw ** 2))
         audio = audio_raw / curr_rmse * rmse_dano
         audio = np.clip(audio, -0.99, 0.99)
