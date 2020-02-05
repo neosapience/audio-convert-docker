@@ -46,7 +46,7 @@ class Test(TestCase):
         audio_size = len(r.data)
         assert self.expected_lower_bound <= audio_size
         assert self.expected_upper_bound >= audio_size
-        
+
     def test_merge_out_mp3(self):
         cli = app.test_client()
         r = cli.post('/merge?out=mp3', content_type='multipart/form-data', data=self.data, buffered=True)

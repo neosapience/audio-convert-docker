@@ -114,8 +114,11 @@ def merge():
 
     # combined = AudioSegment.empty()
     combined = None
+    kept_sample = None
+    kept_silence = None
     for meta in json_data['meta_list']:
         key, silence = meta
+        
         audio_file = request.files.get(key)
         audio_data = BytesIO(audio_file.read())
 
@@ -124,11 +127,26 @@ def merge():
         audio = audio_raw / curr_rmse * rmse_dano
         audio = np.clip(audio, -0.99, 0.99)
 
-        padding = np.zeros(int(rate * silence))
-        if combined is None:
-            combined = np.concatenate([audio, padding], axis=0)
-        else:
-            combined = np.concatenate([combined, audio, padding], axis=0)
+        concat_data = []
+        
+        if combined is not None:
+            concat_data += [combined]
+
+        if kept_silence is not None:
+            size = int(rate * kept_silence)
+            padding = _make_padding(kept_sample, audio[0], size)
+            concat_data += [padding]
+        
+        concat_data += [audio]
+        combined = np.concatenate(concat_data, axis=0)
+
+        kept_silence = silence
+        kept_sample = audio[-1]
+
+    if kept_silence != None:
+        size = int(rate * kept_silence)
+        padding = _make_padding(kept_sample, 0.0, size)
+        combined = np.concatenate([combined, padding], axis=0)
 
     combined = (combined * 32767).astype(np.int16)
     buffer = BytesIO()
@@ -167,3 +185,11 @@ def _mp3_parameters(data):
     if parameters:
         ret['parameters'] = parameters
     return ret
+
+
+def _make_padding(start_sample, end_sample, size):
+    try:
+        step = (end_sample - start_sample) / size
+        return np.arange(start_sample, end_sample, step)
+    except:
+        return np.zeros(size)
