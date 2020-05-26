@@ -9,6 +9,8 @@ import json
 import librosa
 import numpy as np
 from scipy.io import wavfile
+from distutils.util import strtobool
+
 
 app = Flask(__name__)
 
@@ -104,6 +106,7 @@ def merge():
     rmse_dano = 0.0777645544406
     clip_len_in_ms = 0.06
     ext = request.args.get('out', 'wav')
+    use_normalizer = bool(strtobool(request.args.get('norm', '1')))
     if ext not in ('wav', 'mp3', 'ogg'):
         abort(400, description='only support wav or mp3')
     
@@ -125,9 +128,12 @@ def merge():
 
         audio_raw, rate = librosa.load(audio_data, sr=None)
         audio_raw = audio_raw[int(clip_len_in_ms * rate):-int(clip_len_in_ms * rate)]
-        curr_rmse = np.sqrt(np.mean(audio_raw ** 2))
-        audio = audio_raw / curr_rmse * rmse_dano
-        audio = np.clip(audio, -0.99, 0.99)
+        if use_normalizer:
+            curr_rmse = np.sqrt(np.mean(audio_raw ** 2))
+            audio = audio_raw / curr_rmse * rmse_dano
+            audio = np.clip(audio, -0.99, 0.99)
+        else:
+            audio = audio_raw
 
         concat_data = []
         

@@ -35,12 +35,12 @@ class Test(TestCase):
     def test_merge_out_mp4_unsupported(self):
         cli = app.test_client()
         r = cli.post('/merge?out=mp4', content_type='multipart/form-data', data=self.data, buffered=True)
-        self.assertEqual(400, r.status_code)
+        assert 400 == r.status_code
 
     def test_merge_out_wav(self):
         cli = app.test_client()
         r = cli.post('/merge?out=wav', content_type='multipart/form-data', data=self.data, buffered=True)
-        self.assertEqual(200, r.status_code)
+        assert 200 == r.status_code
         self.assertEqual(b'RIFF', r.data[:4])
 
         audio_size = len(r.data)
@@ -50,11 +50,17 @@ class Test(TestCase):
     def test_merge_out_mp3(self):
         cli = app.test_client()
         r = cli.post('/merge?out=mp3', content_type='multipart/form-data', data=self.data, buffered=True)
-        self.assertEqual(200, r.status_code)
-        self.assertEqual(b'ID3', r.data[:3])
+        assert 200 == r.status_code
+        assert b'ID3' == r.data[:3]
 
     def test_merge_out_ogg(self):
         cli = app.test_client()
         r = cli.post('/merge?out=ogg', content_type='multipart/form-data', data=self.data, buffered=True)
-        self.assertEqual(200, r.status_code)
-        self.assertEqual(b'OggS', r.data[:4])
+        assert 200 == r.status_code
+        assert b'OggS' == r.data[:4]
+
+    def test_merge_no_normalizer(self):
+        cli = app.test_client()
+        r = cli.post('/merge?out=wav&norm=0', content_type='multipart/form-data', data=self.data, buffered=True)
+        assert 200 == r.status_code
+        assert b'RIFF' == r.data[:4]
