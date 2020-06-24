@@ -47,3 +47,47 @@ class Test(TestCase):
             higher_bitrate_data_size = len(r.data)
 
         self.assertTrue(default_bitrate_data_size != higher_bitrate_data_size)
+
+    def test_any_to_mp3_sampling_rate(self):
+        cli = app.test_client()
+        # wav to mp3
+        with open('./tests/assets/test.wav', 'rb') as f:
+            r = cli.post('/any_to_mp3', content_type='multipart/form-data', data={
+                'file': f,
+                'bitrate': '16k'
+            }, buffered=True)
+            self.assertEqual(200, r.status_code)
+            default_bitrate_data_size = len(r.data)
+
+        with open('./tests/assets/test.wav', 'rb') as f:
+            r = cli.post('/any_to_mp3', content_type='multipart/form-data', data={
+                'file': f,
+                'bitrate': '16k',
+                'sampling_rate': '44100',
+                'sample_fmt': 'flt'
+            }, buffered=True)
+            self.assertEqual(200, r.status_code)
+            higher_bitrate_data_size = len(r.data)
+
+        self.assertTrue(default_bitrate_data_size != higher_bitrate_data_size)
+
+        # mp3 to mp3
+        with open('./tests/assets/test.mp3', 'rb') as f:
+            r = cli.post('/any_to_mp3', content_type='multipart/form-data', data={
+                'file': f,
+                'bitrate': '16k'
+            }, buffered=True)
+            self.assertEqual(200, r.status_code)
+            default_bitrate_data_size = len(r.data)
+
+        with open('./tests/assets/test.mp3', 'rb') as f:
+            r = cli.post('/any_to_mp3', content_type='multipart/form-data', data={
+                'file': f,
+                'bitrate': '16k',
+                'sampling_rate': '44100',
+                'sample_fmt': 'flt'
+            }, buffered=True)
+            self.assertEqual(200, r.status_code)
+            higher_bitrate_data_size = len(r.data)
+
+        self.assertTrue(default_bitrate_data_size != higher_bitrate_data_size)

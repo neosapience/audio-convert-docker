@@ -76,3 +76,4 @@ db/
 .pytest_cache/
 deploy.yml
 deploy-test.yml
+.DS_Store

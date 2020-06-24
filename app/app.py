@@ -101,6 +101,39 @@ def wav_to_mp3():
         mimetype='audio/mpeg')
 
 
+@app.route('/any_to_mp3', methods=['POST'])
+def any_to_mp3():
+    if 'file' not in request.files:
+        abort(400, description='file is not attached')
+    data = request.form.to_dict()
+    file = request.files['file']
+    file_data = BytesIO(file.read())
+    if os.path.splitext(file.filename)[1] == '.wav':
+        audio = AudioSegment.from_wav(file_data)
+    elif os.path.splitext(file.filename)[1] == '.mp3':
+        audio = AudioSegment.from_mp3(file_data)
+    else:
+        abort(400, description='unsupported file format')
+
+    if data.get('silence', False):
+        silence_ms = int(float(data.get('silence')) * 1000)
+        audio += AudioSegment.silent(duration=silence_ms)
+
+    mp3_params = _mp3_parameters(data)
+    output_data = BytesIO()
+    r = audio.export(output_data, format='mp3', codec='libmp3lame', **mp3_params)
+    if not r:
+        abort(400, description='failed wave to mp3')
+
+    name = shortuuid.ShortUUID().random(length=8)
+    output_data.seek(0)
+    return send_file(
+        output_data,
+        as_attachment=True,
+        attachment_filename=f'{name}.mp3',
+        mimetype='audio/mpeg')
+
+
 @app.route("/merge", methods=['POST'])
 def merge():
     rmse_dano = 0.0777645544406
