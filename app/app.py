@@ -139,7 +139,8 @@ def merge():
     rmse_dano = 0.0777645544406
     clip_len_in_ms = 0.06
     ext = request.args.get('out', 'wav')
-    use_normalizer = bool(strtobool(request.args.get('norm', '1')))
+    # use_normalizer = bool(strtobool(request.args.get('norm', '1')))
+    use_normalizer = False
     if ext not in ('wav', 'mp3', 'ogg'):
         abort(400, description='only support wav or mp3')
     
