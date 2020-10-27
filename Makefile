@@ -31,3 +31,6 @@ push-base:
 
 history:
 	@docker history ${name}:${tag}
+
+sh:
+	@docker run --rm -it ${name}:${tag} bash

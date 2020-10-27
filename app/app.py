@@ -10,6 +10,7 @@ import librosa
 import numpy as np
 from scipy.io import wavfile
 from distutils.util import strtobool
+import sox
 
 
 app = Flask(__name__)
@@ -191,6 +192,11 @@ def merge():
         combined = np.concatenate([combined, padding], axis=0)
 
     combined = (combined * 32767).astype(np.int16)
+
+    tempo = json_data.get('tempo')
+    if tempo is not None:
+        combined = _adjust_tempo(combined, rate, tempo)
+
     buffer = BytesIO()
     wavfile.write(buffer, rate, combined)
     buffer.seek(0)
@@ -235,3 +241,9 @@ def _make_padding(start_sample, end_sample, size):
         return np.arange(start_sample, end_sample, step)
     except:
         return np.zeros(size)
+
+
+def _adjust_tempo(audio, rate, tempo):
+    tfm = sox.Transformer()
+    tfm.tempo(tempo, 's')
+    return tfm.build_array(input_array=audio, sample_rate_in=rate)
