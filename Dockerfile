@@ -1,4 +1,4 @@
-FROM neosapience/audio-convert:base
+FROM 723557075577.dkr.ecr.ap-northeast-2.amazonaws.com/audio-convert:base
 
 COPY . .
 

@@ -1,4 +1,4 @@
-name := neosapience/audio-convert
+name := 723557075577.dkr.ecr.ap-northeast-2.amazonaws.com/audio-convert
 tag := dev
 pwd := $(shell pwd)
 
