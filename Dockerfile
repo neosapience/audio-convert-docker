@@ -1,11 +1,11 @@
-FROM neosapience/audio-convert:base
+FROM 723557075577.dkr.ecr.ap-northeast-2.amazonaws.com/audio-convert:base
 
 COPY . .
 
 HEALTHCHECK --interval=30s --timeout=2s --start-period=10s \
   CMD curl -f http://localhost/health || exit 1
 
-RUN pip install sox
+RUN pip install sox==1.4.1
 
 EXPOSE 80
 ENTRYPOINT ["/opt/audio-convert/docker-entrypoint.sh"]

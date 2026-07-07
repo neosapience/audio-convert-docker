@@ -2,13 +2,26 @@ version: 2.1
 executors:
   my-executor:
     environment:
-      IMAGE_NAME: neosapience/audio-convert
+      AWS_REGION: ap-northeast-2
+      AWS_ACCOUNT_ID: "723557075577"
+      IMAGE_NAME: 723557075577.dkr.ecr.ap-northeast-2.amazonaws.com/audio-convert
       DOCKER_BUILD_PATH: ./
       DOCKER_FILE_PATH: ./Dockerfile
       DOCKER_BASE_FILE_PATH: ./Dockerfile.base
       RECIPE_URL: github.com/neosapience/eks-recipe.git
       CONFIG_ROOT_DEV: k8s/apps/audio-convert/overlays/dev
       CONFIG_ROOT_PROD: k8s/apps/audio-convert/overlays/prod
+
+commands:
+  ecr-login:
+    description: "AWS ECR 로그인"
+    steps:
+      - run:
+          name: Login to ECR
+          command: |
+            aws ecr get-login-password --region $AWS_REGION | \
+              docker login --username AWS --password-stdin \
+              $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 jobs:
   build-base:
@@ -17,10 +30,7 @@ jobs:
     steps:
     - checkout
 
-    - run:
-        name: Login Docker Hub
-        command: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - ecr-login
 
     - run:
         name: Build images
@@ -45,15 +55,12 @@ jobs:
     - run:
         name: Print
         command: |
-          echo "docker user name; $DOCKER_USER"
+          echo "ecr registry; $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
           echo "image name; $IMAGE_NAME"
 
     - checkout
 
-    - run:
-        name: Login Docker Hub
-        command: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - ecr-login
 
     - run:
         name: Build images
@@ -80,13 +87,10 @@ jobs:
     - run:
         name: Print
         command: |
-          echo "docker user name; $DOCKER_USER"
+          echo "ecr registry; $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
           echo "image name; $IMAGE_NAME"
 
-    - run:
-        name: Login Docker Hub
-        command: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - ecr-login
 
     - run:
         name: Tag and Push Image
@@ -136,7 +140,7 @@ workflows:
   build-push-flow:
     jobs:
     - build-push:
-        context: image-build
+        context: ecr-typecast
         filters:
           branches:
             ignore:
@@ -153,7 +157,7 @@ workflows:
   release-prod-flow:
     jobs:
     - release-prod:
-        context: image-build
+        context: ecr-typecast
         filters:
           branches:
             ignore: /.*/
@@ -170,7 +174,7 @@ workflows:
   base-image-flow:
     jobs:
     - build-base:
-        context: image-build
+        context: ecr-typecast
         filters:
           branches:
             only: base
